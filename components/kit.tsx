@@ -2,12 +2,12 @@
 
 import { ArrowLeft, ImagePlus, Minus, Plus, Search, Store, X, type LucideIcon } from 'lucide-react'
 import Link from 'next/link'
-import { useCallback, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useState, type ComponentProps, type ReactNode } from 'react'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -250,8 +250,6 @@ export function Meta({ label, children, className }: { label: string; children: 
 /** A button for async work: disabled with a spinner until the returned promise settles. */
 export function AsyncButton({ onClick, children, disabled, ...props }: Omit<ComponentProps<typeof Button>, 'onClick'> & { onClick: () => Promise<unknown> | unknown }) {
   const [busy, setBusy] = useState(false)
-  const alive = useRef(true)
-  useEffect(() => () => { alive.current = false }, [])
   return (
     <Button
       {...props}
@@ -261,7 +259,8 @@ export function AsyncButton({ onClick, children, disabled, ...props }: Omit<Comp
         try {
           await onClick()
         } finally {
-          if (alive.current) setBusy(false)
+          // Safe after unmount: React ignores state updates on components that are gone.
+          setBusy(false)
         }
       }}
     >
@@ -380,31 +379,53 @@ export function fileToDataUrl(file: File, maxSide = 1100): Promise<string> {
   })
 }
 
-export function ImagePicker({ value, onChange, label, alt, onError }: { value?: string | null; onChange: (dataUrl: string | null) => void; label: string; alt: string; onError: (message: string) => void }) {
+/**
+ * A file chooser styled as a button. The real input keeps the keyboard focus and its focus ring
+ * is drawn on the label, so there is exactly one tab stop and it is always visible.
+ */
+export function FileButton({ accept, onFile, size, children }: { accept: string; onFile: (file: File) => void; size?: 'default' | 'lg'; children: ReactNode }) {
   const id = useId()
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      {value && <img src={value} alt={alt} className="size-16 rounded-lg border object-cover" />}
+    <>
       <input
         id={id}
         type="file"
-        accept="image/png,image/jpeg,image/webp"
-        className="sr-only"
-        onChange={async (e) => {
+        accept={accept}
+        className="peer sr-only"
+        onChange={(e) => {
           const file = e.target.files?.[0]
           e.target.value = ''
-          if (!file) return
+          if (file) onFile(file)
+        }}
+      />
+      <label
+        htmlFor={id}
+        data-slot="button"
+        className={cn(buttonVariants({ variant: 'outline', size }), 'cursor-pointer peer-focus-visible:border-ring peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50')}
+      >
+        {children}
+      </label>
+    </>
+  )
+}
+
+export function ImagePicker({ value, onChange, label, alt, onError }: { value?: string | null; onChange: (dataUrl: string | null) => void; label: string; alt: string; onError: (message: string) => void }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {value && <img src={value} alt={alt} className="size-16 rounded-lg border object-cover" />}
+      <FileButton
+        accept="image/png,image/jpeg,image/webp"
+        onFile={async (file) => {
           try {
             onChange(await fileToDataUrl(file))
           } catch (error) {
             onError(error instanceof Error ? error.message : 'That image could not be read.')
           }
         }}
-      />
-      <Button variant="outline" nativeButton={false} render={<label htmlFor={id} />} className="cursor-pointer">
+      >
         <ImagePlus data-icon="inline-start" aria-hidden />
         {value ? 'Change photo' : label}
-      </Button>
+      </FileButton>
       {value && (
         <Button variant="ghost" onClick={() => onChange(null)}>
           <X data-icon="inline-start" aria-hidden />

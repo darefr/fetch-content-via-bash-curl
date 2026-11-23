@@ -2,9 +2,9 @@
 
 import { Archive, Download, Gift, Package, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { AsyncButton, Chips, downloadCsv, EmptyState, Field, Modal, PageHeader, SearchInput, StatusPill, useConfirm } from '@/components/kit'
+import { AsyncButton, Chips, downloadCsv, EmptyState, Field, FileButton, Modal, PageHeader, SearchInput, StatusPill, useConfirm } from '@/components/kit'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
@@ -105,7 +105,6 @@ export function CatalogView() {
   const router = useRouter()
   const pathname = usePathname()
   const params = useSearchParams()
-  const importId = useId()
   const [confirm, confirmDialog] = useConfirm()
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [category, setCategory] = useState('')
@@ -146,8 +145,7 @@ export function CatalogView() {
         subtitle={`${live.length} products · ${live.filter((p) => p.available).length} available to order`}
         actions={
           <>
-            <input id={importId} type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) void importCsv(file) }} />
-            <Button variant="outline" size="lg" nativeButton={false} render={<label htmlFor={importId} />} className="cursor-pointer"><Upload data-icon="inline-start" aria-hidden />Import CSV</Button>
+            <FileButton accept=".csv,text/csv" size="lg" onFile={(file) => void importCsv(file)}><Upload data-icon="inline-start" aria-hidden />Import CSV</FileButton>
             <Button variant="outline" size="lg" onClick={() => downloadCsv('feristock-catalog.csv', [['Name', 'SKU', 'Category', 'Unit', 'Price', 'Minimum order', 'Bulk prices', 'Scheme', 'Available'], ...live.map((p) => [p.name, p.sku, p.category, p.unit, p.price, p.moq, p.tiers.map((t) => `${t.min}+ ${t.price}`).join('; '), p.scheme, p.available ? 'Yes' : 'No'])])}><Download data-icon="inline-start" aria-hidden />Export</Button>
             <Button size="lg" onClick={() => setEditing('new')}><Plus data-icon="inline-start" aria-hidden />Add product</Button>
           </>

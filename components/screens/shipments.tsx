@@ -68,10 +68,10 @@ export function DispatchDialog({ order, onClose }: { order: Order; onClose: () =
       </fieldset>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={CARRIER_LABEL[mode]} htmlFor="dispatch-carrier" error={error?.field === 'carrier' ? error.message : undefined}>
-          <Input id="dispatch-carrier" value={carrier} onChange={(e) => setCarrier(e.target.value)} placeholder={mode === 'van' ? 'Bishnu Thapa' : mode === 'bilti' ? 'Lumbini Yatayat Transport' : ''} maxLength={80} />
+          <Input id="dispatch-carrier" value={carrier} onChange={(e) => { setCarrier(e.target.value); if (error?.field === 'carrier') setError(null) }} placeholder={mode === 'van' ? 'Bishnu Thapa' : mode === 'bilti' ? 'Lumbini Yatayat Transport' : ''} maxLength={80} />
         </Field>
         <Field label={REF_LABEL[mode]} htmlFor="dispatch-ref" error={error?.field === 'ref' ? error.message : undefined}>
-          <Input id="dispatch-ref" value={ref} onChange={(e) => setRef(e.target.value)} placeholder={mode === 'van' ? 'Lu 2 Kha 4120' : mode === 'bilti' ? 'BL-2041' : ''} maxLength={40} />
+          <Input id="dispatch-ref" value={ref} onChange={(e) => { setRef(e.target.value); if (error?.field === 'ref') setError(null) }} placeholder={mode === 'van' ? 'Lu 2 Kha 4120' : mode === 'bilti' ? 'BL-2041' : ''} maxLength={40} />
         </Field>
       </div>
       <Field label="Note for the shop" htmlFor="dispatch-note" hint="Optional. For example the number of cartons or the expected arrival.">

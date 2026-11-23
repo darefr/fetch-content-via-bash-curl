@@ -3,9 +3,9 @@
 import { Barcode, Bell, BellOff, Boxes, Download, EllipsisVertical, MessageSquareQuote, Pencil, Plus, Scale, ShoppingCart, Trash2, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { AsyncButton, Chips, downloadCsv, EmptyState, Field, Modal, PageHeader, SearchInput, StatusPill, Stepper, useConfirm } from '@/components/kit'
+import { AsyncButton, Chips, downloadCsv, EmptyState, Field, FileButton, Modal, PageHeader, SearchInput, StatusPill, Stepper, useConfirm } from '@/components/kit'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -161,7 +161,6 @@ export function InventoryView() {
   const pathname = usePathname()
   const params = useSearchParams()
   const [confirm, confirmDialog] = useConfirm()
-  const importId = useId()
   const startFilter = FILTERS.find((x) => x === params.get('filter')) ?? 'all'
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [filter, setFilter] = useState<Filter>(startFilter)
@@ -220,11 +219,10 @@ export function InventoryView() {
         subtitle={`${s.items.length} items · stock value ${rs(sumBy(s.items, (i) => i.qty * i.cost))} at cost`}
         actions={
           <>
-            <input id={importId} type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) void importCsv(file) }} />
-            <Button variant="outline" size="lg" nativeButton={false} render={<label htmlFor={importId} />} className="cursor-pointer">
+            <FileButton accept=".csv,text/csv" size="lg" onFile={(file) => void importCsv(file)}>
               <Upload data-icon="inline-start" aria-hidden />
               Import CSV
-            </Button>
+            </FileButton>
             <Button variant="outline" size="lg" onClick={() => downloadCsv('feristock-inventory.csv', [['Name', 'SKU', 'Category', 'Unit', 'Quantity', 'Reorder level', 'Cost', 'Supplier', 'Expiry'], ...s.items.map((i) => [i.name, i.sku, i.category, i.unit, i.qty, i.threshold, i.cost, i.supplierId ? partnerName(s, i.supplierId) : '', i.expiry ?? ''])])}>
               <Download data-icon="inline-start" aria-hidden />
               Export

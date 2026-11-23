@@ -143,16 +143,22 @@ const TABS: Record<AppState['ws'], { href: string; label: string; icon: LucideIc
   ],
 }
 
-/** The nav entry whose path is the longest prefix of the current one. */
-function activeHref(pathname: string, hrefs: string[]) {
-  return hrefs.filter((h) => pathname === h || pathname.startsWith(`${h}/`)).sort((a, b) => b.length - a.length)[0]
+const navFor = (ws: AppState['ws']) => (ws === 'retailer' ? RETAILER_NAV : SUPPLIER_NAV)
+const navHrefs = (ws: AppState['ws']) => navFor(ws).flatMap((g) => g.items.map((i) => i.href))
+
+/**
+ * The nav entry for the current page: the longest entry that is a prefix of the path. The
+ * workspace home is a prefix of every page in it, so it only counts on an exact match.
+ */
+function activeHref(pathname: string, hrefs: string[], home: string) {
+  return hrefs.filter((h) => pathname === h || (h !== home && pathname.startsWith(`${h}/`))).sort((a, b) => b.length - a.length)[0]
 }
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const s = useApp()
   const pathname = usePathname()
-  const nav = s.ws === 'retailer' ? RETAILER_NAV : SUPPLIER_NAV
-  const active = activeHref(pathname, nav.flatMap((g) => g.items.map((i) => i.href)))
+  const nav = navFor(s.ws)
+  const active = activeHref(pathname, navHrefs(s.ws), `/${s.ws}`)
   return (
     <nav aria-label="Workspace" className="flex flex-col gap-4">
       {nav.map((section) => (
@@ -402,7 +408,10 @@ function Frame({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const tabs = TABS[s.ws]
-  const activeTab = activeHref(pathname, tabs.map((t) => t.href))
+  const home = `/${s.ws}`
+  const activeTab = activeHref(pathname, tabs.map((t) => t.href), home)
+  // A page with no tab of its own is reached through the More menu.
+  const inMore = !activeTab && Boolean(activeHref(pathname, navHrefs(s.ws), home))
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -416,7 +425,7 @@ function Frame({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div className="min-h-dvh md:pl-60">
+    <div data-app-shell className="min-h-dvh md:pl-60">
       <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <Link href={`/${s.ws}`} aria-label="FeriStock dashboard" className="flex h-14 shrink-0 items-center px-4 outline-none focus-visible:ring-3 focus-visible:ring-sidebar-ring">
           <Brand inverse />
@@ -488,7 +497,7 @@ function Frame({ children }: { children: ReactNode }) {
             {t.label}
           </Link>
         ))}
-        <button type="button" onClick={() => setMenuOpen(true)} className="flex h-14 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground outline-none focus-visible:bg-muted">
+        <button type="button" onClick={() => setMenuOpen(true)} className={cn('flex h-14 flex-col items-center justify-center gap-1 text-xs font-medium outline-none focus-visible:bg-muted', inMore ? 'text-primary' : 'text-muted-foreground')}>
           <Menu className="size-5" aria-hidden />
           More
         </button>

@@ -162,6 +162,20 @@
   font-family: var(--font-plex), var(--font-deva), ui-sans-serif, system-ui, sans-serif !important;
 }
 
+/*
+ * Inside a workspace the top bar is sticky and phones get a fixed tab bar. Reserving their
+ * height keeps a control that receives keyboard focus from being scrolled underneath them.
+ */
+html:has([data-app-shell]) {
+  scroll-padding-top: 4rem;
+}
+
+@media (max-width: 767px) {
+  html:has([data-app-shell]) {
+    scroll-padding-bottom: 4rem;
+  }
+}
+
 /* 44px touch targets and 16px inputs (stops iOS zoom) on phones and touch screens. */
 @media (max-width: 767px), (pointer: coarse) {
   [data-slot='input'],

@@ -145,14 +145,14 @@ export function PayView({ id }: { id: string }) {
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <Field label="Transaction ID" htmlFor="pay-ref" error={error?.field === 'ref' ? error.message : undefined} hint="From your banking app or the transfer slip.">
-                        <Input id="pay-ref" value={ref} onChange={(e) => setRef(e.target.value)} maxLength={60} />
+                        <Input id="pay-ref" value={ref} onChange={(e) => { setRef(e.target.value); if (error?.field === 'ref') setError(null) }} maxLength={60} />
                       </Field>
                       <Field label="Note (optional)" htmlFor="pay-note">
                         <Input id="pay-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
                       </Field>
                     </div>
                     <Field label="Payment proof" error={error?.field === 'image' ? error.message : undefined} hint="A screenshot or photo that shows the amount and the transaction ID.">
-                      <ImagePicker value={proof} onChange={setProof} label="Upload proof" alt="Your payment proof" onError={(message) => toast.error(message)} />
+                      <ImagePicker value={proof} onChange={(image) => { setProof(image); if (error?.field === 'image') setError(null) }} label="Upload proof" alt="Your payment proof" onError={(message) => toast.error(message)} />
                     </Field>
                     <AsyncButton className="w-fit" onClick={async () => {
                       const r = await act('pay.proof', { orderId: order.id, ref, note, image: proof ?? undefined }, { success: `Proof sent. ${name} confirms it after checking their account.`, quiet: true })
