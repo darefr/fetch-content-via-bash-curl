@@ -1,0 +1,218 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-plex), var(--font-deva), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-plex), var(--font-deva), ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-navy-foreground: var(--brand-navy-foreground);
+  --color-sky: var(--sky);
+  --color-sky-foreground: var(--sky-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-tone-green: var(--tone-green);
+  --color-tone-green-soft: var(--tone-green-soft);
+  --color-tone-green-line: var(--tone-green-line);
+  --color-tone-green-ink: var(--tone-green-ink);
+  --color-tone-amber: var(--tone-amber);
+  --color-tone-amber-soft: var(--tone-amber-soft);
+  --color-tone-amber-line: var(--tone-amber-line);
+  --color-tone-amber-ink: var(--tone-amber-ink);
+  --color-tone-red: var(--tone-red);
+  --color-tone-red-soft: var(--tone-red-soft);
+  --color-tone-red-line: var(--tone-red-line);
+  --color-tone-red-ink: var(--tone-red-ink);
+  --color-tone-teal: var(--tone-teal);
+  --color-tone-teal-soft: var(--tone-teal-soft);
+  --color-tone-teal-line: var(--tone-teal-line);
+  --color-tone-teal-ink: var(--tone-teal-ink);
+  --color-tone-blue: var(--tone-blue);
+  --color-tone-blue-soft: var(--tone-blue-soft);
+  --color-tone-blue-line: var(--tone-blue-line);
+  --color-tone-blue-ink: var(--tone-blue-ink);
+  --color-tone-grey: var(--tone-grey);
+  --color-tone-grey-soft: var(--tone-grey-soft);
+  --color-tone-grey-line: var(--tone-grey-line);
+  --color-tone-grey-ink: var(--tone-grey-ink);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  color-scheme: light;
+  --background: #f2f6fb;
+  --foreground: #0e172d;
+  --card: #fff;
+  --card-foreground: #0e172d;
+  --popover: #fff;
+  --popover-foreground: #0e172d;
+  --primary: #134ac5;
+  --primary-foreground: #fafcfe;
+  --brand-navy: #0e1d4a;
+  --brand-navy-foreground: #f0f6fd;
+  --sky: #d9e9ff;
+  --sky-foreground: #0e1d4a;
+  --secondary: #e1ecfc;
+  --secondary-foreground: #13295f;
+  --muted: #ecf0f8;
+  --muted-foreground: #4b5669;
+  --accent: #e0ecfe;
+  --accent-foreground: #0e2459;
+  --destructive: #c90d23;
+  --border: #d8dfe9;
+  --input: #7d8a9f;
+  --ring: #2867e4;
+  --chart-1: #134ac5;
+  --chart-2: #0f9293;
+  --chart-3: #e49e22;
+  --chart-4: #2a9754;
+  --chart-5: #db2b33;
+  --radius: 0.625rem;
+  --sidebar: #0e1d4a;
+  --sidebar-foreground: #e1e8f6;
+  --sidebar-primary: #1f5ed9;
+  --sidebar-primary-foreground: #fafcfe;
+  --sidebar-accent: #1d2f60;
+  --sidebar-accent-foreground: #fafcfe;
+  --sidebar-border: #27365c;
+  --sidebar-ring: #6a9cfb;
+
+  --tone-green: #2a9754;
+  --tone-green-soft: #ddf8e3;
+  --tone-green-line: #aae1b7;
+  --tone-green-ink: #005729;
+  --tone-amber: #e49e22;
+  --tone-amber-soft: #fff1ce;
+  --tone-amber-line: #efcc83;
+  --tone-amber-ink: #774500;
+  --tone-red: #db2b33;
+  --tone-red-soft: #ffebe9;
+  --tone-red-line: #ffc3c0;
+  --tone-red-ink: #a20519;
+  --tone-teal: #0f9293;
+  --tone-teal-soft: #d6f8f7;
+  --tone-teal-line: #a3dedd;
+  --tone-teal-ink: #005356;
+  --tone-blue: #2d69de;
+  --tone-blue-soft: #e4efff;
+  --tone-blue-line: #b7d3fc;
+  --tone-blue-ink: #103ca1;
+  --tone-grey: #778193;
+  --tone-grey-soft: #ebeff4;
+  --tone-grey-line: #cfd4de;
+  --tone-grey-ink: #3f4858;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+}
+
+/* Sonner sets its own system font stack; keep toasts in the app typeface. */
+[data-sonner-toaster],
+[data-sonner-toast] {
+  font-family: var(--font-plex), var(--font-deva), ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* 44px touch targets and 16px inputs (stops iOS zoom) on phones and touch screens. */
+@media (max-width: 767px), (pointer: coarse) {
+  [data-slot='input'],
+  [data-slot='native-select'],
+  [data-slot='input-group'],
+  [data-slot='toggle-group-item'],
+  [data-slot='button']:not([data-size='xs']):not([data-size='icon-xs']) {
+    min-height: 2.75rem;
+  }
+
+  [data-slot='button']:not([data-size='xs']):not([data-size='icon-xs']) {
+    min-width: 2.75rem;
+  }
+
+  [data-slot='tabs-list'] {
+    height: auto;
+    min-height: 2.75rem;
+  }
+
+  [data-slot='tabs-trigger'] {
+    min-height: 2.375rem;
+    padding-inline: 0.75rem;
+  }
+
+  [data-slot='input'],
+  [data-slot='native-select'],
+  [data-slot='textarea'],
+  [data-slot='input-group-control'] {
+    font-size: 1rem;
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}
