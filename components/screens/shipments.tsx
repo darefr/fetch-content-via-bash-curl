@@ -1,10 +1,10 @@
 'use client'
 
 import { Package, PackageCheck, Send, TriangleAlert, Truck } from 'lucide-react'
-import Link from 'next/link'
 import { useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { AsyncButton, Chips, EmptyState, Field, ImagePicker, Modal, PageHeader, Panel, Stat, StatusPill } from '@/components/kit'
+import { Link } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAct, useApp } from '@/lib/client'

@@ -1,11 +1,11 @@
 'use client'
 
 import { Barcode, Bell, BellOff, Boxes, Download, EllipsisVertical, MessageSquareQuote, Pencil, Plus, Scale, ShoppingCart, Trash2, Upload } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { AsyncButton, Chips, downloadCsv, EmptyState, Field, FileButton, Modal, PageHeader, SearchInput, StatusPill, Stepper, useConfirm } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -157,7 +157,7 @@ function ItemDialog({ item, onClose }: { item: Item | null; onClose: () => void 
 export function InventoryView() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const pathname = usePathname()
   const params = useSearchParams()
   const [confirm, confirmDialog] = useConfirm()

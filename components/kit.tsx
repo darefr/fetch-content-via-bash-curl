@@ -1,8 +1,9 @@
 'use client'
 
-import { ArrowLeft, ImagePlus, Minus, Plus, Search, Store, X, type LucideIcon } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowLeft, ImagePlus, Minus, Plus, Search, X, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useId, useState, type ComponentProps, type ReactNode } from 'react'
+import { Brand, StatusPill } from '@/components/brand'
+import { Link } from '@/components/nav'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
@@ -16,43 +17,12 @@ import { group, rs, toCsv } from '@/lib/format'
 import type { Tone } from '@/lib/logic'
 import { cn } from '@/lib/utils'
 
-const PILL: Record<Tone, string> = {
-  green: 'border-tone-green-line bg-tone-green-soft text-tone-green-ink',
-  amber: 'border-tone-amber-line bg-tone-amber-soft text-tone-amber-ink',
-  red: 'border-tone-red-line bg-tone-red-soft text-tone-red-ink',
-  teal: 'border-tone-teal-line bg-tone-teal-soft text-tone-teal-ink',
-  blue: 'border-tone-blue-line bg-tone-blue-soft text-tone-blue-ink',
-  grey: 'border-tone-grey-line bg-tone-grey-soft text-tone-grey-ink',
-}
-
-const DOT: Record<Tone, string> = {
-  green: 'bg-tone-green', amber: 'bg-tone-amber', red: 'bg-tone-red', teal: 'bg-tone-teal', blue: 'bg-tone-blue', grey: 'bg-tone-grey',
-}
-
 const SOFT: Record<Tone, string> = {
   green: 'bg-tone-green-soft text-tone-green-ink', amber: 'bg-tone-amber-soft text-tone-amber-ink', red: 'bg-tone-red-soft text-tone-red-ink',
   teal: 'bg-tone-teal-soft text-tone-teal-ink', blue: 'bg-tone-blue-soft text-tone-blue-ink', grey: 'bg-tone-grey-soft text-tone-grey-ink',
 }
 
-export function Brand({ inverse, compact, className }: { inverse?: boolean; compact?: boolean; className?: string }) {
-  return (
-    <span className={cn('inline-flex items-center gap-2 text-base font-semibold tracking-tight', inverse ? 'text-brand-navy-foreground' : 'text-foreground', className)}>
-      <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-        <Store className="size-4.5" aria-hidden />
-      </span>
-      <span className={cn(compact && 'sr-only')}>FeriStock</span>
-    </span>
-  )
-}
-
-export function StatusPill({ tone, children, className }: { tone: Tone; children: ReactNode; className?: string }) {
-  return (
-    <span className={cn('inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border px-2 text-xs font-medium whitespace-nowrap', PILL[tone], className)}>
-      <span aria-hidden className={cn('size-1.5 rounded-full', DOT[tone])} />
-      {children}
-    </span>
-  )
-}
+export { Brand, StatusPill }
 
 export function PageHeader({ title, subtitle, back, pills, actions }: {
   title: string
@@ -92,7 +62,7 @@ export function Panel({ title, subtitle, action, children, className, bodyClassN
   bodyClassName?: string
 }) {
   return (
-    <section className={cn('overflow-hidden rounded-xl border bg-card', className)}>
+    <section className={cn('overflow-hidden rounded-xl border bg-card shadow-soft', className)}>
       {title && (
         <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
           <div className="min-w-0">
@@ -107,6 +77,39 @@ export function Panel({ title, subtitle, action, children, className, bodyClassN
   )
 }
 
+/**
+ * One record of a list, shown where its panel is too narrow for a table: two lines on a phone,
+ * one line once there is room. It is sized by the panel (give the panel `@container`), not by
+ * the screen, because the sidebar takes a share of the screen on a computer.
+ */
+export function RecordRow({ title, detail, badge, value, note, action }: {
+  title: ReactNode
+  detail?: ReactNode
+  badge?: ReactNode
+  value?: ReactNode
+  note?: ReactNode
+  action?: ReactNode
+}) {
+  return (
+    <li className="flex flex-col gap-2.5 px-4 py-3.5 @xl:flex-row @xl:items-center @xl:gap-4 @xl:py-2.5">
+      <div className="flex min-w-0 items-start justify-between gap-3 @xl:flex-1 @xl:items-center">
+        <div className="min-w-0">
+          <p className="font-semibold">{title}</p>
+          {detail && <p className="truncate text-sm text-muted-foreground">{detail}</p>}
+        </div>
+        {badge}
+      </div>
+      <div className="flex items-center justify-between gap-3 @xl:w-60 @xl:shrink-0">
+        <p className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+          <span className="font-semibold tabular-nums">{value}</span>
+          {note && <span className="text-sm text-muted-foreground">{note}</span>}
+        </p>
+        {action}
+      </div>
+    </li>
+  )
+}
+
 export function PanelLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Button variant="ghost" nativeButton={false} render={<Link href={href} />} className="shrink-0">
@@ -117,7 +120,7 @@ export function PanelLink({ href, children }: { href: string; children: ReactNod
 
 export function Stat({ label, value, hint, icon: Icon, tone = 'blue' }: { label: string; value: ReactNode; hint?: ReactNode; icon: LucideIcon; tone?: Tone }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-soft">
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <span className={cn('grid size-8 shrink-0 place-items-center rounded-lg', SOFT[tone])}>

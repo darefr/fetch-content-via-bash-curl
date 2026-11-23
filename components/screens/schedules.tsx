@@ -1,10 +1,11 @@
 'use client'
 
 import { CalendarClock, Info, Pause, Pencil, Play, Plus, ShoppingCart, Trash2 } from 'lucide-react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { AsyncButton, EmptyState, Field, Modal, PageHeader, Panel, StatusPill, Stepper, useConfirm } from '@/components/kit'
+import { useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
@@ -136,7 +137,7 @@ function ScheduleDialog({ schedule, onClose }: { schedule: Schedule | null; onCl
 export function SchedulesView() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const pathname = usePathname()
   const params = useSearchParams()
   const [confirm, confirmDialog] = useConfirm()

@@ -1,10 +1,10 @@
 'use client'
 
 import { Check, Undo2, X } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { AsyncButton, Chips, EmptyState, Field, Modal, PageHeader, Panel, StatusPill, Stepper } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Textarea } from '@/components/ui/textarea'
@@ -103,7 +103,7 @@ type Filter = 'open' | 'closed' | 'all'
 
 export function ReturnsView() {
   const s = useApp()
-  const router = useRouter()
+  const router = useNav()
   const pathname = usePathname()
   const params = useSearchParams()
   const retail = s.ws === 'retailer'

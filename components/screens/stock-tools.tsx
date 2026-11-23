@@ -2,11 +2,11 @@
 
 import JsBarcode from 'jsbarcode'
 import { ArrowLeftRight, Barcode, CalendarCheck, CalendarClock, CalendarX2, Download, Pencil, Plus, Printer, Undo2 } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { useEffect, useRef, useState } from 'react'
 import { AsyncButton, Chips, downloadCsv, EmptyState, Field, Modal, PageHeader, Panel, SearchInput, Stat, StatusPill, Stepper } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { AdjustDialog } from '@/components/screens/inventory'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils'
 
 export function StockMovesView() {
   const s = useApp()
-  const router = useRouter()
+  const router = useNav()
   const pathname = usePathname()
   const params = useSearchParams()
   const [query, setQuery] = useState('')
@@ -66,7 +66,7 @@ export function StockMovesView() {
           {(Object.keys(MOVE_LABEL) as MoveType[]).map((t) => <NativeSelectOption key={t} value={t}>{MOVE_LABEL[t]}</NativeSelectOption>)}
         </NativeSelect>
       </div>
-      <Panel>
+      <Panel bodyClassName="@container">
         {rows.length === 0 ? (
           <EmptyState icon={ArrowLeftRight} title={s.movements.length ? 'No changes match' : 'No stock changes yet'} text="Sales, deliveries, damage and stock counts are listed here as they are recorded." />
         ) : (
@@ -77,9 +77,9 @@ export function StockMovesView() {
                   <th scope="col">Item</th>
                   <th scope="col">Change</th>
                   <th scope="col" className="text-right">Qty</th>
-                  <th scope="col" className="text-right max-sm:hidden">Balance</th>
-                  <th scope="col" className="max-md:hidden">By</th>
-                  <th scope="col" className="max-lg:hidden">Note</th>
+                  <th scope="col" className="text-right @max-xl:hidden">Balance</th>
+                  <th scope="col" className="@max-3xl:hidden">By</th>
+                  <th scope="col" className="@max-5xl:hidden">Note</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -87,13 +87,13 @@ export function StockMovesView() {
                   <tr key={m.id} className="[&>td]:px-4 [&>td]:py-2.5">
                     <td>
                       <p className="font-medium">{m.name}</p>
-                      <p className="text-xs text-muted-foreground">{fmtDateTime(m.at)}<span className="md:hidden">{` · ${m.by}`}</span></p>
+                      <p className="text-xs text-muted-foreground">{fmtDateTime(m.at)}<span className="@3xl:hidden">{` · ${m.by}`}</span></p>
                     </td>
                     <td className="whitespace-nowrap">{MOVE_LABEL[m.type]}</td>
                     <td className={cn('text-right font-semibold tabular-nums', m.delta < 0 ? 'text-tone-red-ink' : 'text-tone-green-ink')}>{m.delta > 0 ? `+${m.delta}` : m.delta}</td>
-                    <td className="text-right tabular-nums max-sm:hidden">{m.balance}</td>
-                    <td className="max-md:hidden">{m.by}</td>
-                    <td className="text-muted-foreground max-lg:hidden">{m.note ?? ''}</td>
+                    <td className="text-right tabular-nums @max-xl:hidden">{m.balance}</td>
+                    <td className="@max-3xl:hidden">{m.by}</td>
+                    <td className="text-muted-foreground @max-5xl:hidden">{m.note ?? ''}</td>
                   </tr>
                 ))}
               </tbody>

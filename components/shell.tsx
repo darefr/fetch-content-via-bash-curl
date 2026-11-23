@@ -5,10 +5,10 @@ import {
   LogOut, Menu, MessageSquareQuote, Package, Plus, ReceiptText, RotateCcw, Search, Settings, ShoppingCart, Store, Truck, Undo2,
   Users, Wallet, Warehouse, type LucideIcon,
 } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { AppFooter, Brand, useConfirm } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -209,7 +209,7 @@ function OrgCard() {
 
 function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const s = useApp()
-  const router = useRouter()
+  const router = useNav()
   const [query, setQuery] = useState('')
   const [cursor, setCursor] = useState(0)
   const base = `/${s.ws}`
@@ -286,7 +286,7 @@ function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (
 function Notifications() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const [open, setOpen] = useState(false)
   const unread = s.notices.filter((n) => !n.read).length
   return (
@@ -334,7 +334,7 @@ function Notifications() {
 function ProfileMenu() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const [confirm, dialog] = useConfirm()
   const leave = async (action: string, input: object = {}) => {
     try {
@@ -404,7 +404,7 @@ function ProfileMenu() {
 function Frame({ children }: { children: ReactNode }) {
   const s = useApp()
   const pathname = usePathname()
-  const router = useRouter()
+  const router = useNav()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const tabs = TABS[s.ws]

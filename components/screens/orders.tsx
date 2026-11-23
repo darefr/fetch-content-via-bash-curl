@@ -1,11 +1,10 @@
 'use client'
 
 import { Ban, Check, ClipboardList, Download, FileDown, HandCoins, ImageIcon, PackageCheck, Phone, RotateCcw, ShoppingCart, SlidersHorizontal, Truck, Undo2, Wallet, X } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { AsyncButton, Chips, downloadCsv, EmptyState, Field, Meta, Modal, PageHeader, Panel, SearchInput, StatusPill, Stepper, useConfirm } from '@/components/kit'
+import { AsyncButton, Chips, downloadCsv, EmptyState, Field, Meta, Modal, PageHeader, Panel, RecordRow, SearchInput, StatusPill, Stepper, useConfirm } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { MissingView } from '@/components/screens/missing'
 import { ReturnDialog } from '@/components/screens/returns'
 import { DispatchDialog } from '@/components/screens/shipments'
@@ -101,6 +100,17 @@ export function OrdersView() {
   const q = query.trim().toLowerCase()
   const rows = s.orders.filter((o) => (tab === 'all' || (tab === 'closed' ? closed(o) : o.status === tab)) && (!q || o.no.toLowerCase().includes(q) || other(o).toLowerCase().includes(q)))
 
+  /** The one next step for an order, for whoever is looking at it. */
+  const action = (o: Order) => {
+    const href = `/${s.ws}/orders/${o.id}`
+    if (retail && isPayable(o)) return <Button size="sm" nativeButton={false} render={<Link href={`${href}/pay`} />}>Pay now</Button>
+    if (retail && o.status === 'dispatched') return <Button size="sm" nativeButton={false} render={<Link href={href} />}>Confirm</Button>
+    if (!retail && o.status === 'pending') return <Button size="sm" nativeButton={false} render={<Link href={href} />}>Review</Button>
+    if (!retail && o.status === 'accepted') return <AsyncButton variant="outline" size="sm" onClick={() => act('order.pack', { id: o.id }, { success: `${o.no} marked packed.` })}>Mark packed</AsyncButton>
+    if (!retail && o.status === 'packed') return <Button size="sm" onClick={() => setDispatching(o)}>Dispatch</Button>
+    return <Button variant="outline" size="sm" nativeButton={false} render={<Link href={href} />}>{retail ? 'Track' : 'View'}</Button>
+  }
+
   return (
     <>
       <PageHeader
@@ -132,20 +142,20 @@ export function OrdersView() {
         ]}
       />
       <SearchInput value={query} onChange={setQuery} placeholder={retail ? 'Search by order number or supplier' : 'Search by order number or shop'} />
-      <Panel>
+      <Panel bodyClassName="@container">
         {rows.length === 0 ? (
           <EmptyState icon={ClipboardList} title={s.orders.length ? 'No orders match' : 'No orders yet'} text={retail ? 'Place your first order from the reorder cart.' : 'Orders appear here as soon as a shop sends one.'} />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto @max-2xl:hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left [&>th]:px-4 [&>th]:py-2.5 [&>th]:font-semibold">
                   <th scope="col">Order</th>
-                  <th scope="col" className="max-sm:hidden">{retail ? 'Supplier' : 'Shop'}</th>
-                  <th scope="col" className="text-right max-lg:hidden">Items</th>
+                  <th scope="col">{retail ? 'Supplier' : 'Shop'}</th>
+                  <th scope="col" className="text-right @max-4xl:hidden">Items</th>
                   <th scope="col" className="text-right">Total</th>
                   <th scope="col">Status</th>
-                  <th scope="col" className="max-md:hidden">Payment</th>
+                  <th scope="col" className="@max-4xl:hidden">Payment</th>
                   <th scope="col" className="text-right">Action</th>
                 </tr>
               </thead>
@@ -158,34 +168,34 @@ export function OrdersView() {
                       <td className="whitespace-nowrap">
                         <Link href={href} className="font-semibold text-primary hover:underline">{o.no}</Link>
                         <p className="text-xs text-muted-foreground">{fmtDate(o.createdAt)}</p>
-                        <p className="max-w-36 truncate text-xs text-muted-foreground sm:hidden">{other(o)}</p>
                       </td>
-                      <td className="max-sm:hidden">{other(o)}</td>
-                      <td className="text-right tabular-nums max-lg:hidden">{o.lines.length}</td>
+                      <td>{other(o)}</td>
+                      <td className="text-right tabular-nums @max-4xl:hidden">{o.lines.length}</td>
                       <td className="text-right tabular-nums whitespace-nowrap">{rs(o.total)}</td>
                       <td><StatusPill tone={ORDER_TONE[o.status]}>{ORDER_LABEL[o.status]}</StatusPill></td>
-                      <td className="max-md:hidden">{pay ? <StatusPill tone={pay.tone}>{pay.label}</StatusPill> : <span className="text-muted-foreground">Not due</span>}</td>
-                      <td className="text-right">
-                        {retail && isPayable(o) ? (
-                          <Button size="sm" nativeButton={false} render={<Link href={`${href}/pay`} />}>Pay now</Button>
-                        ) : retail && o.status === 'dispatched' ? (
-                          <Button size="sm" nativeButton={false} render={<Link href={href} />}>Confirm</Button>
-                        ) : !retail && o.status === 'pending' ? (
-                          <Button size="sm" nativeButton={false} render={<Link href={href} />}>Review</Button>
-                        ) : !retail && o.status === 'accepted' ? (
-                          <AsyncButton variant="outline" size="sm" onClick={() => act('order.pack', { id: o.id }, { success: `${o.no} marked packed.` })}>Mark packed</AsyncButton>
-                        ) : !retail && o.status === 'packed' ? (
-                          <Button size="sm" onClick={() => setDispatching(o)}>Dispatch</Button>
-                        ) : (
-                          <Button variant="outline" size="sm" nativeButton={false} render={<Link href={href} />}>{retail ? 'Track' : 'View'}</Button>
-                        )}
-                      </td>
+                      <td className="@max-4xl:hidden">{pay ? <StatusPill tone={pay.tone}>{pay.label}</StatusPill> : <span className="text-muted-foreground">Not due</span>}</td>
+                      <td className="text-right">{action(o)}</td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
           </div>
+        )}
+        {rows.length > 0 && (
+          <ul className="divide-y @2xl:hidden">
+            {rows.map((o) => (
+              <RecordRow
+                key={o.id}
+                title={<Link href={`/${s.ws}/orders/${o.id}`} className="text-primary hover:underline">{o.no}</Link>}
+                detail={`${other(o)} · ${fmtDate(o.createdAt)}`}
+                badge={<StatusPill tone={ORDER_TONE[o.status]}>{ORDER_LABEL[o.status]}</StatusPill>}
+                value={rs(o.total)}
+                note={payBadge(o)?.label}
+                action={action(o)}
+              />
+            ))}
+          </ul>
         )}
       </Panel>
       {dispatching && <DispatchDialog order={dispatching} onClose={() => setDispatching(null)} />}
@@ -196,7 +206,7 @@ export function OrdersView() {
 export function OrderDetailView({ id }: { id: string }) {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const [confirm, confirmDialog] = useConfirm()
   const [dialog, setDialog] = useState<'adjust' | 'reject' | 'dispatch' | 'return' | null>(null)
   const order = s.orders.find((o) => o.id === id)
@@ -294,23 +304,26 @@ export function OrderDetailView({ id }: { id: string }) {
             </Panel>
           )}
 
-          <Panel title="Items" subtitle={`${order.lines.length} ${order.lines.length === 1 ? 'item' : 'items'}`}>
+          <Panel title="Items" subtitle={`${order.lines.length} ${order.lines.length === 1 ? 'item' : 'items'}`} bodyClassName="@container">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left [&>th]:px-4 [&>th]:py-2.5 [&>th]:font-semibold">
                     <th scope="col">Item</th>
                     <th scope="col" className="text-right">Qty</th>
-                    <th scope="col" className="text-right max-sm:hidden">Rate</th>
+                    <th scope="col" className="text-right @max-lg:hidden">Rate</th>
                     <th scope="col" className="text-right">Amount</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {order.lines.map((l) => (
                     <tr key={`${l.sku}-${l.name}`} className="[&>td]:px-4 [&>td]:py-2.5">
-                      <td><p className="font-medium">{l.name}</p><p className="text-xs text-muted-foreground">{l.sku}</p></td>
+                      <td>
+                        <p className="font-medium">{l.name}</p>
+                        <p className="text-xs text-muted-foreground">{l.sku}<span className="@lg:hidden">{` · ${rs(l.price)} each`}</span></p>
+                      </td>
                       <td className="text-right tabular-nums whitespace-nowrap">{`${l.qty} ${l.unit}`}</td>
-                      <td className="text-right tabular-nums whitespace-nowrap max-sm:hidden">{rs(l.price)}</td>
+                      <td className="text-right tabular-nums whitespace-nowrap @max-lg:hidden">{rs(l.price)}</td>
                       <td className="text-right tabular-nums whitespace-nowrap">{rs(l.amount)}</td>
                     </tr>
                   ))}
@@ -318,7 +331,7 @@ export function OrderDetailView({ id }: { id: string }) {
                 <tfoot>
                   <tr className="border-t bg-muted/50 font-semibold [&>td]:px-4 [&>td]:py-3">
                     <td colSpan={2}>Order total</td>
-                    <td className="max-sm:hidden" />
+                    <td className="@max-lg:hidden" />
                     <td className="text-right text-base tabular-nums whitespace-nowrap">{rs(order.total)}</td>
                   </tr>
                 </tfoot>

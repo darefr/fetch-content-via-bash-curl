@@ -1,10 +1,9 @@
 'use client'
 
 import { Gift, MessageSquareQuote, Plus, Send, ShoppingCart, Trash2, TriangleAlert, Warehouse, X } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { AsyncButton, EmptyState, PageHeader, Panel, PanelLink, SearchInput, StatusPill, Stepper, useConfirm } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
@@ -20,7 +19,7 @@ function priceLine(p: Product) {
 export function CartView() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const [confirm, confirmDialog] = useConfirm()
   const [query, setQuery] = useState('')
   const [supplierId, setSupplierId] = useState('')

@@ -1,8 +1,8 @@
 'use client'
 
 import { SearchX } from 'lucide-react'
-import Link from 'next/link'
 import { EmptyState } from '@/components/kit'
+import { Link } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { useApp } from '@/lib/client'
 

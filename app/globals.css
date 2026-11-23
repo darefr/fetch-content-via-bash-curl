@@ -20,6 +20,8 @@
   --color-brand-navy-foreground: var(--brand-navy-foreground);
   --color-sky: var(--sky);
   --color-sky-foreground: var(--sky-foreground);
+  --color-marigold: var(--marigold);
+  --color-marigold-foreground: var(--marigold-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -76,6 +78,10 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Two levels of elevation: cards resting on the page, and surfaces lifted off a navy ground. */
+  --shadow-soft: 0 1px 2px rgb(14 29 74 / 0.05), 0 10px 28px -18px rgb(14 29 74 / 0.22);
+  --shadow-lift: 0 2px 4px rgb(4 10 32 / 0.25), 0 36px 70px -30px rgb(4 10 32 / 0.7);
 }
 
 :root {
@@ -92,6 +98,8 @@
   --brand-navy-foreground: #f0f6fd;
   --sky: #d9e9ff;
   --sky-foreground: #0e1d4a;
+  --marigold: #f6b445;
+  --marigold-foreground: #261701;
   --secondary: #e1ecfc;
   --secondary-foreground: #13295f;
   --muted: #ecf0f8;
@@ -173,6 +181,49 @@ html:has([data-app-shell]) {
 @media (max-width: 767px) {
   html:has([data-app-shell]) {
     scroll-padding-bottom: 4rem;
+  }
+}
+
+/* A faint shelf grid behind the landing hero, fading out towards the copy. */
+.landing-grid {
+  background-image:
+    linear-gradient(to right, rgb(240 246 253 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(240 246 253 / 0.07) 1px, transparent 1px);
+  background-size: 3.5rem 3.5rem;
+  mask-image: radial-gradient(ellipse 80% 90% at 75% 30%, #000 10%, transparent 75%);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-landing]) {
+    scroll-behavior: smooth;
+  }
+
+  /* Entrance on load, staggered with --rise-delay. */
+  .rise {
+    animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  /* Blocks further down settle into place as they scroll into view. Without support they simply show. */
+  @supports (animation-timeline: view()) {
+    @media screen {
+      .reveal {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 55%;
+      }
+    }
   }
 }
 

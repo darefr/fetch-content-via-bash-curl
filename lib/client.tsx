@@ -11,6 +11,8 @@ export class RpcError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 45_000
+
 /** Calls one server action. Every mutation in the app goes through here. */
 export async function rpc<T = unknown>(action: string, input: object = {}, ws?: Workspace): Promise<T> {
   let response: Response
@@ -20,6 +22,8 @@ export async function rpc<T = unknown>(action: string, input: object = {}, ws?: 
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
       body: JSON.stringify({ action, input, ws }),
+      // A request that never comes back would otherwise leave its button spinning for good.
+      signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(REQUEST_TIMEOUT_MS) : undefined,
     })
   } catch {
     throw new RpcError('No connection. Check your internet and try again.', 0)
@@ -45,6 +49,45 @@ async function fetchState(url: string): Promise<AppState> {
   return response.json()
 }
 
+type Predict = (s: AppState, input: Record<string, unknown>) => AppState
+
+/**
+ * Actions whose outcome is known before the server answers. The screen changes on the tap, and
+ * the server's answer then confirms it or puts the old value back.
+ */
+const PREDICT: Record<string, Predict> = {
+  'item.set': (s, { id, qty }) => ({ ...s, items: s.items.map((i) => (i.id === id ? { ...i, qty: Number(qty) } : i)) }),
+  'cart.set': (s, { productId, qty }) => {
+    const amount = Number(qty)
+    if (amount <= 0) return { ...s, cart: s.cart.filter((l) => l.productId !== productId) }
+    if (s.cart.some((l) => l.productId === productId)) return { ...s, cart: s.cart.map((l) => (l.productId === productId ? { ...l, qty: amount } : l)) }
+    return { ...s, cart: [...s.cart, { productId: String(productId), qty: amount }] }
+  },
+  'cart.clear': (s) => ({ ...s, cart: [] }),
+  'notice.read': (s, { id }) => ({ ...s, notices: s.notices.map((n) => (!id || n.id === id ? { ...n, read: true } : n)) }),
+}
+
+// Actions reach the server one at a time, in the order they were made, so a quick run of taps
+// cannot arrive out of order. While any are on their way, the screen keeps what the user did
+// instead of taking a slower answer that predates it.
+let queue: Promise<unknown> = Promise.resolve()
+let inFlight = 0
+const waiting: (() => void)[] = []
+
+function inOrder<T>(task: () => Promise<T>): Promise<T> {
+  const run = queue.then(task)
+  queue = run.catch(() => undefined)
+  return run
+}
+
+/** Resolves once the workspace data on screen includes everything sent so far. */
+async function caughtUp(revalidate: () => Promise<unknown>) {
+  if (inFlight === 0) await revalidate().catch(() => undefined)
+  // Another action started meanwhile: it brings the fresh data when it finishes.
+  if (inFlight > 0) return new Promise<void>((resolve) => waiting.push(resolve))
+  for (const resume of waiting.splice(0)) resume()
+}
+
 const WorkspaceContext = createContext<AppState | null>(null)
 
 /** Holds the server-rendered state for the first paint; SWR keeps it fresh afterwards. */
@@ -55,7 +98,12 @@ export function AppProvider({ initial, children }: { initial: AppState; children
 export function useApp(): AppState {
   const initial = useContext(WorkspaceContext)
   if (!initial) throw new Error('useApp must be used inside a workspace layout.')
-  const { data } = useSWR(stateKey(initial.ws), fetchState, { fallbackData: initial, refreshInterval: 15_000, keepPreviousData: true })
+  const { data } = useSWR(stateKey(initial.ws), fetchState, {
+    fallbackData: initial,
+    refreshInterval: 15_000,
+    keepPreviousData: true,
+    isPaused: () => inFlight > 0,
+  })
   return data ?? initial
 }
 
@@ -72,17 +120,30 @@ export function useAct() {
       input: object = {},
       options: { success?: string | ((result: T) => string); quiet?: boolean } = {},
     ): Promise<ActResult<T>> {
+      const key = ws ? stateKey(ws) : undefined
+      if (key && initial && Object.hasOwn(PREDICT, action)) {
+        void mutate<AppState>(key, (current) => PREDICT[action](current ?? initial, input as Record<string, unknown>), { revalidate: false })
+      }
+
+      inFlight += 1
+      let outcome: ActResult<T>
       try {
-        const result = await rpc<T>(action, input, ws)
-        if (ws) await mutate(stateKey(ws))
-        if (options.success) toast.success(typeof options.success === 'function' ? options.success(result) : options.success)
-        return { ok: true, result }
+        outcome = { ok: true, result: await inOrder(() => rpc<T>(action, input, ws)) }
       } catch (error) {
         const failure = error instanceof RpcError ? error : new RpcError('Something went wrong. Try again.', 0)
-        if (!options.quiet) toast.error(failure.message)
-        return { ok: false, error: failure.message, field: failure.field }
+        outcome = { ok: false, error: failure.message, field: failure.field }
       }
+      inFlight -= 1
+      // Also after a failure, so anything shown ahead of the server goes back to what it holds.
+      if (key) await caughtUp(() => mutate(key))
+
+      if (!outcome.ok) {
+        if (!options.quiet) toast.error(outcome.error)
+      } else if (options.success) {
+        toast.success(typeof options.success === 'function' ? options.success(outcome.result) : options.success)
+      }
+      return outcome
     },
-    [mutate, ws],
+    [mutate, ws, initial],
   )
 }

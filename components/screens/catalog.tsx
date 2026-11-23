@@ -1,10 +1,11 @@
 'use client'
 
 import { Archive, Download, Gift, Package, Pencil, Plus, Trash2, Upload } from 'lucide-react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { AsyncButton, Chips, downloadCsv, EmptyState, Field, FileButton, Modal, PageHeader, SearchInput, StatusPill, useConfirm } from '@/components/kit'
+import { useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
@@ -102,7 +103,7 @@ function ProductDialog({ product, onClose }: { product: Product | null; onClose:
 export function CatalogView() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const pathname = usePathname()
   const params = useSearchParams()
   const [confirm, confirmDialog] = useConfirm()

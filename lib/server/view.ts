@@ -48,7 +48,9 @@ export function buildState(ctx: Ctx): AppState {
 
   return {
     ws: ctx.ws,
-    now: new Date().toISOString(),
+    // To the minute: a background refresh that finds nothing new then matches what is on
+    // screen exactly, and the browser has nothing to redraw.
+    now: new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString(),
     demo: true,
     canSwitch: ctx.org.role === 'both',
     canReset: DEMO_ORG_IDS.includes(me) && ctx.user.role === 'owner',

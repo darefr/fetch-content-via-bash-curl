@@ -1,11 +1,10 @@
 'use client'
 
 import { Copy, HandCoins, Landmark, ReceiptText, Send, ShieldCheck, Wallet, type LucideIcon } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { AsyncButton, Field, ImagePicker, Meta, Modal, PageHeader, Panel, StatusPill } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { MissingView } from '@/components/screens/missing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,7 +19,7 @@ interface Session { paymentId: string; ref: string; amount: number; merchant: st
 export function PayView({ id }: { id: string }) {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const [method, setMethod] = useState<Method | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [ref, setRef] = useState('')

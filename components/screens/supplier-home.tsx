@@ -1,10 +1,10 @@
 'use client'
 
 import { ArrowRight, Bell, ClipboardList, HandCoins, Package, PackageCheck, Plus, Truck, Wallet } from 'lucide-react'
-import Link from 'next/link'
 import { useState } from 'react'
 import { MonthBars, monthlyTotals } from '@/components/charts'
 import { AsyncButton, BarList, EmptyState, Meta, PageHeader, Panel, PanelLink, Stat, StatusPill } from '@/components/kit'
+import { Link } from '@/components/nav'
 import { DispatchDialog } from '@/components/screens/shipments'
 import { Button } from '@/components/ui/button'
 import { useAct, useApp } from '@/lib/client'

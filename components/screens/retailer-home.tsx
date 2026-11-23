@@ -1,15 +1,15 @@
 'use client'
 
 import { ArrowRight, Boxes, ClipboardList, HandCoins, MessageSquareQuote, Plus, ShoppingCart, TriangleAlert, Truck, Warehouse } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { MonthBars, monthlyTotals } from '@/components/charts'
-import { AsyncButton, EmptyState, Meta, PageHeader, Panel, PanelLink, Stat, StatusPill, Stepper } from '@/components/kit'
+import { AsyncButton, EmptyState, Meta, PageHeader, Panel, PanelLink, RecordRow, Stat, StatusPill, Stepper } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { useAct, useApp } from '@/lib/client'
 import { ago, dueLabel, fmtDate, fmtDay, monthKey, rs } from '@/lib/format'
 import { amountDue, expiryState, isOpen, isPayable, MOVE_LABEL, ORDER_LABEL, ORDER_TONE, partnerName, payBadge, productFor, stockStatus, suggestQty, sumBy } from '@/lib/logic'
+import type { Order } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const SEVERITY = { out: 0, low: 1, ok: 2 }
@@ -17,7 +17,7 @@ const SEVERITY = { out: 0, low: 1, ok: 2 }
 export function RetailerHome() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
 
   const low = s.items
     .filter((i) => stockStatus(i).key !== 'ok')
@@ -43,6 +43,14 @@ export function RetailerHome() {
     if (!r.ok) return
     if (thenOpenCart) router.push('/retailer/orders/new')
     else toast.success('Added to the reorder cart.', { action: { label: 'View cart', onClick: () => router.push('/retailer/orders/new') } })
+  }
+
+  const recent = s.orders.slice(0, 6)
+  const orderAction = (o: Order) => {
+    const receipt = s.receipts.find((r) => r.orderId === o.id)
+    if (isPayable(o)) return <Button size="sm" nativeButton={false} render={<Link href={`/retailer/orders/${o.id}/pay`} />}>Pay now</Button>
+    if (o.status === 'delivered' && receipt) return <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/retailer/receipts/${receipt.id}`} />}>Receipt</Button>
+    return <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/retailer/orders/${o.id}`} />}>Track</Button>
   }
 
   return (
@@ -133,52 +141,57 @@ export function RetailerHome() {
             )}
           </Panel>
 
-          <Panel title="Recent orders" action={<PanelLink href="/retailer/orders">All orders<ArrowRight data-icon="inline-end" aria-hidden /></PanelLink>}>
-            {s.orders.length === 0 ? (
+          <Panel title="Recent orders" bodyClassName="@container" action={<PanelLink href="/retailer/orders">All orders<ArrowRight data-icon="inline-end" aria-hidden /></PanelLink>}>
+            {recent.length === 0 ? (
               <EmptyState icon={ClipboardList} title="No orders yet" text="Your first order appears here with its status and payment." />
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto @max-2xl:hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left [&>th]:px-4 [&>th]:py-2.5 [&>th]:font-semibold">
                       <th scope="col">Order</th>
-                      <th scope="col" className="max-sm:hidden">Supplier</th>
+                      <th scope="col">Supplier</th>
                       <th scope="col" className="text-right">Total</th>
                       <th scope="col">Status</th>
-                      <th scope="col" className="max-md:hidden">Payment</th>
+                      <th scope="col" className="@max-4xl:hidden">Payment</th>
                       <th scope="col" className="text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {s.orders.slice(0, 6).map((o) => {
+                    {recent.map((o) => {
                       const pay = payBadge(o)
-                      const receipt = s.receipts.find((r) => r.orderId === o.id)
                       return (
                         <tr key={o.id} className="[&>td]:px-4 [&>td]:py-2.5">
                           <td className="whitespace-nowrap">
                             <Link href={`/retailer/orders/${o.id}`} className="font-semibold text-primary hover:underline">{o.no}</Link>
                             <p className="text-xs text-muted-foreground">{fmtDate(o.createdAt)}</p>
-                            <p className="text-xs text-muted-foreground sm:hidden">{partnerName(s, o.supplierId)}</p>
                           </td>
-                          <td className="max-sm:hidden">{partnerName(s, o.supplierId)}</td>
+                          <td>{partnerName(s, o.supplierId)}</td>
                           <td className="text-right tabular-nums whitespace-nowrap">{rs(o.total)}</td>
                           <td><StatusPill tone={ORDER_TONE[o.status]}>{ORDER_LABEL[o.status]}</StatusPill></td>
-                          <td className="max-md:hidden">{pay ? <StatusPill tone={pay.tone}>{pay.label}</StatusPill> : <span className="text-muted-foreground">Not due</span>}</td>
-                          <td className="text-right">
-                            {isPayable(o) ? (
-                              <Button size="sm" nativeButton={false} render={<Link href={`/retailer/orders/${o.id}/pay`} />}>Pay now</Button>
-                            ) : o.status === 'delivered' && receipt ? (
-                              <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/retailer/receipts/${receipt.id}`} />}>Receipt</Button>
-                            ) : (
-                              <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/retailer/orders/${o.id}`} />}>Track</Button>
-                            )}
-                          </td>
+                          <td className="@max-4xl:hidden">{pay ? <StatusPill tone={pay.tone}>{pay.label}</StatusPill> : <span className="text-muted-foreground">Not due</span>}</td>
+                          <td className="text-right">{orderAction(o)}</td>
                         </tr>
                       )
                     })}
                   </tbody>
                 </table>
               </div>
+            )}
+            {recent.length > 0 && (
+              <ul className="divide-y @2xl:hidden">
+                {recent.map((o) => (
+                  <RecordRow
+                    key={o.id}
+                    title={<Link href={`/retailer/orders/${o.id}`} className="text-primary hover:underline">{o.no}</Link>}
+                    detail={`${partnerName(s, o.supplierId)} · ${fmtDate(o.createdAt)}`}
+                    badge={<StatusPill tone={ORDER_TONE[o.status]}>{ORDER_LABEL[o.status]}</StatusPill>}
+                    value={rs(o.total)}
+                    note={payBadge(o)?.label}
+                    action={orderAction(o)}
+                  />
+                ))}
+              </ul>
             )}
           </Panel>
         </div>

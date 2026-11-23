@@ -39,7 +39,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${plex.variable} ${deva.variable} bg-background`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${plex.variable} ${deva.variable} bg-background`}>
       <body className="min-h-dvh antialiased">
         {children}
         <Toaster theme="light" position="top-center" richColors closeButton />

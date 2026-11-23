@@ -1,9 +1,9 @@
 'use client'
 
 import { BadgeCheck, CircleAlert, Clock, Download, FileDown, HandCoins, ImageIcon, Phone, Printer, ReceiptText, Wallet } from 'lucide-react'
-import Link from 'next/link'
 import { useState } from 'react'
-import { AsyncButton, Brand, downloadCsv, EmptyState, Field, Meta, Modal, PageHeader, Panel, SearchInput, Stat, StatusPill, useConfirm } from '@/components/kit'
+import { AsyncButton, Brand, downloadCsv, EmptyState, Field, Meta, Modal, PageHeader, Panel, RecordRow, SearchInput, Stat, StatusPill, useConfirm } from '@/components/kit'
+import { Link } from '@/components/nav'
 import { MissingView } from '@/components/screens/missing'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,6 +15,15 @@ import { METHOD_LABEL, MODE_LABEL, type Order, type Payment } from '@/lib/types'
 function dueTone(due: string, now: string): Tone {
   const days = daysUntil(due, now)
   return days < 0 ? 'red' : days <= 7 ? 'amber' : 'blue'
+}
+
+function PdfButton({ id }: { id: string }) {
+  return (
+    <Button variant="outline" size="sm" nativeButton={false} render={<a href={`/api/receipts/${id}`} target="_blank" rel="noreferrer" />}>
+      <FileDown data-icon="inline-start" aria-hidden />
+      PDF
+    </Button>
+  )
 }
 
 function RejectProofDialog({ payment, onClose }: { payment: Payment; onClose: () => void }) {
@@ -60,6 +69,10 @@ export function PaymentsView() {
   const udharo = s.orders.filter((o) => o.payStatus === 'udharo')
   const proofs = s.payments.filter((p) => p.status === 'submitted')
   const history = [...s.payments].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const statusPill = (p: Payment) => {
+    const badge = paymentBadge(p)
+    return <StatusPill tone={badge.tone}>{retail || p.status !== 'submitted' ? badge.label : 'To verify'}</StatusPill>
+  }
 
   return (
     <>
@@ -129,43 +142,59 @@ export function PaymentsView() {
         </Panel>
       )}
 
-      <Panel title="Payment history">
+      <Panel title="Payment history" bodyClassName="@container">
         {history.length === 0 ? (
           <EmptyState icon={Wallet} title="No payments yet" text="Wallet payments, transfer proofs and settled udharo are listed here." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto @max-2xl:hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left [&>th]:px-4 [&>th]:py-2.5 [&>th]:font-semibold">
                   <th scope="col">Order</th>
-                  <th scope="col" className="max-sm:hidden">{retail ? 'Supplier' : 'Shop'}</th>
+                  <th scope="col">{retail ? 'Supplier' : 'Shop'}</th>
                   <th scope="col">Method</th>
-                  <th scope="col" className="max-lg:hidden">Reference</th>
+                  <th scope="col" className="@max-4xl:hidden">Reference</th>
                   <th scope="col" className="text-right">Amount</th>
-                  <th scope="col" className="max-md:hidden">Status</th>
+                  <th scope="col">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {history.slice(0, 100).map((p) => {
                   const order = orderOf(p)
-                  const badge = paymentBadge(p)
                   return (
                     <tr key={p.id} className="[&>td]:px-4 [&>td]:py-2.5">
                       <td className="whitespace-nowrap">
                         {order ? <Link href={`/${s.ws}/orders/${order.id}`} className="font-semibold text-primary hover:underline">{order.no}</Link> : 'Order'}
                         <p className="text-xs text-muted-foreground">{fmtDate(p.createdAt)}</p>
                       </td>
-                      <td className="max-sm:hidden">{other(order)}</td>
+                      <td>{other(order)}</td>
                       <td className="whitespace-nowrap">{METHOD_LABEL[p.method]}</td>
-                      <td className="text-muted-foreground max-lg:hidden">{p.ref}</td>
+                      <td className="text-muted-foreground @max-4xl:hidden">{p.ref}</td>
                       <td className="text-right tabular-nums whitespace-nowrap">{rs(p.amount)}</td>
-                      <td className="max-md:hidden"><StatusPill tone={badge.tone}>{retail || p.status !== 'submitted' ? badge.label : 'To verify'}</StatusPill></td>
+                      <td>{statusPill(p)}</td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
           </div>
+        )}
+        {history.length > 0 && (
+          <ul className="divide-y @2xl:hidden">
+            {history.slice(0, 100).map((p) => {
+              const order = orderOf(p)
+              return (
+                <RecordRow
+                  key={p.id}
+                  title={order ? <Link href={`/${s.ws}/orders/${order.id}`} className="text-primary hover:underline">{order.no}</Link> : 'Order'}
+                  detail={`${other(order)} · ${fmtDate(p.createdAt)}`}
+                  badge={statusPill(p)}
+                  value={rs(p.amount)}
+                  note={METHOD_LABEL[p.method]}
+                />
+              )
+            })}
+          </ul>
         )}
       </Panel>
       {rejecting && <RejectProofDialog payment={rejecting} onClose={() => setRejecting(null)} />}
@@ -268,19 +297,19 @@ export function ReceiptsView() {
         }
       />
       <SearchInput value={query} onChange={setQuery} placeholder="Search by receipt, order or business" />
-      <Panel>
+      <Panel bodyClassName="@container">
         {rows.length === 0 ? (
           <EmptyState icon={ReceiptText} title={s.receipts.length ? 'No receipts match' : 'No receipts yet'} text="A receipt is issued when an order is paid or its delivery is confirmed." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto @max-2xl:hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left [&>th]:px-4 [&>th]:py-2.5 [&>th]:font-semibold">
                   <th scope="col">Receipt</th>
-                  <th scope="col" className="max-sm:hidden">{retail ? 'Supplier' : 'Shop'}</th>
-                  <th scope="col" className="max-lg:hidden">Method</th>
+                  <th scope="col">{retail ? 'Supplier' : 'Shop'}</th>
+                  <th scope="col" className="@max-4xl:hidden">Method</th>
                   <th scope="col" className="text-right">Amount</th>
-                  <th scope="col" className="max-md:hidden">Status</th>
+                  <th scope="col">Status</th>
                   <th scope="col" className="text-right">Open</th>
                 </tr>
               </thead>
@@ -291,21 +320,31 @@ export function ReceiptsView() {
                       <Link href={`/${s.ws}/receipts/${r.id}`} className="font-semibold text-primary hover:underline">{r.no}</Link>
                       <p className="text-xs text-muted-foreground">{`${order.no} · ${fmtDate(r.issuedAt)}`}</p>
                     </td>
-                    <td className="max-sm:hidden">{partner}</td>
-                    <td className="max-lg:hidden">{r.method ? METHOD_LABEL[r.method] : 'Not chosen yet'}</td>
+                    <td>{partner}</td>
+                    <td className="@max-4xl:hidden">{r.method ? METHOD_LABEL[r.method] : 'Not chosen yet'}</td>
                     <td className="text-right tabular-nums whitespace-nowrap">{rs(r.amount)}</td>
-                    <td className="max-md:hidden"><StatusPill tone={r.paid ? 'green' : 'amber'}>{r.paid ? 'Paid' : 'Payment pending'}</StatusPill></td>
-                    <td className="text-right">
-                      <Button variant="outline" size="sm" nativeButton={false} render={<a href={`/api/receipts/${r.id}`} target="_blank" rel="noreferrer" />}>
-                        <FileDown data-icon="inline-start" aria-hidden />
-                        PDF
-                      </Button>
-                    </td>
+                    <td><StatusPill tone={r.paid ? 'green' : 'amber'}>{r.paid ? 'Paid' : 'Payment pending'}</StatusPill></td>
+                    <td className="text-right"><PdfButton id={r.id} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        )}
+        {rows.length > 0 && (
+          <ul className="divide-y @2xl:hidden">
+            {rows.slice(0, 150).map(({ receipt: r, order, partner }) => (
+              <RecordRow
+                key={r.id}
+                title={<Link href={`/${s.ws}/receipts/${r.id}`} className="text-primary hover:underline">{r.no}</Link>}
+                detail={`${partner} · ${order.no} · ${fmtDate(r.issuedAt)}`}
+                badge={<StatusPill tone={r.paid ? 'green' : 'amber'}>{r.paid ? 'Paid' : 'Payment pending'}</StatusPill>}
+                value={rs(r.amount)}
+                note={r.method ? METHOD_LABEL[r.method] : undefined}
+                action={<PdfButton id={r.id} />}
+              />
+            ))}
+          </ul>
         )}
       </Panel>
     </>
@@ -359,29 +398,33 @@ export function ReceiptView({ id }: { id: string }) {
             </div>
           ))}
         </div>
-        <div className="overflow-x-auto">
+        <div className="@container overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b text-left [&>th]:px-5 [&>th]:py-2.5 [&>th]:font-semibold">
+              <tr className="border-b text-left [&>th]:px-5 [&>th]:py-2.5 [&>th]:font-semibold @max-lg:[&>th]:px-4">
                 <th scope="col">Item</th>
                 <th scope="col" className="text-right">Qty</th>
-                <th scope="col" className="text-right">Rate</th>
+                <th scope="col" className="text-right @max-lg:hidden">Rate</th>
                 <th scope="col" className="text-right">Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {order.lines.map((l) => (
-                <tr key={`${l.sku}-${l.name}`} className="[&>td]:px-5 [&>td]:py-2.5">
-                  <td><p className="font-medium">{l.name}</p><p className="text-xs text-muted-foreground">{l.sku}</p></td>
+                <tr key={`${l.sku}-${l.name}`} className="[&>td]:px-5 [&>td]:py-2.5 @max-lg:[&>td]:px-4">
+                  <td>
+                    <p className="font-medium">{l.name}</p>
+                    <p className="text-xs text-muted-foreground">{l.sku}<span className="@lg:hidden">{` · ${rs(l.price)} each`}</span></p>
+                  </td>
                   <td className="text-right tabular-nums whitespace-nowrap">{`${l.qty} ${l.unit}`}</td>
-                  <td className="text-right tabular-nums whitespace-nowrap">{rs(l.price)}</td>
+                  <td className="text-right tabular-nums whitespace-nowrap @max-lg:hidden">{rs(l.price)}</td>
                   <td className="text-right tabular-nums whitespace-nowrap">{rs(l.amount)}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t bg-muted/50 font-semibold [&>td]:px-5 [&>td]:py-3">
-                <td colSpan={3}>Order total</td>
+              <tr className="border-t bg-muted/50 font-semibold [&>td]:px-5 [&>td]:py-3 @max-lg:[&>td]:px-4">
+                <td colSpan={2}>Order total</td>
+                <td className="@max-lg:hidden" />
                 <td className="text-right text-base tabular-nums whitespace-nowrap">{rs(order.total)}</td>
               </tr>
             </tfoot>

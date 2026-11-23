@@ -1,10 +1,10 @@
 'use client'
 
 import { Check, MessageSquareQuote, Plus, Send, Trash2, X } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { AsyncButton, Chips, EmptyState, Field, Modal, PageHeader, Panel, StatusPill, useConfirm } from '@/components/kit'
+import { Link, useNav } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
@@ -158,7 +158,7 @@ type Filter = 'open' | 'closed' | 'all'
 export function QuotesView() {
   const s = useApp()
   const act = useAct()
-  const router = useRouter()
+  const router = useNav()
   const pathname = usePathname()
   const params = useSearchParams()
   const retail = s.ws === 'retailer'
@@ -213,6 +213,7 @@ export function QuotesView() {
                   title={`${q.no} · ${partnerName(s, retail ? q.supplierId : q.retailerId)}`}
                   subtitle={`Asked ${fmtDate(q.createdAt)}${q.repliedAt ? ` · answered ${fmtDate(q.repliedAt)}` : ''}`}
                   action={<StatusPill tone={TONE[q.status]}>{label(q)}</StatusPill>}
+                  bodyClassName="@container"
                 >
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -220,16 +221,19 @@ export function QuotesView() {
                         <tr className="border-b text-left [&>th]:px-4 [&>th]:py-2 [&>th]:font-semibold">
                           <th scope="col">Item</th>
                           <th scope="col" className="text-right">Qty</th>
-                          <th scope="col" className="text-right">Target</th>
+                          <th scope="col" className="text-right @max-lg:hidden">Target</th>
                           <th scope="col" className="text-right">Offered</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {q.lines.map((l, i) => (
                           <tr key={`${l.name}-${i}`} className="[&>td]:px-4 [&>td]:py-2">
-                            <td className="font-medium">{l.name}</td>
+                            <td className="font-medium">
+                              {l.name}
+                              <p className="text-xs font-normal text-muted-foreground @lg:hidden">{l.target ? `Target ${rs(l.target)}` : 'No target price'}</p>
+                            </td>
                             <td className="text-right tabular-nums whitespace-nowrap">{`${l.qty} ${l.unit}`}</td>
-                            <td className="text-right tabular-nums whitespace-nowrap text-muted-foreground">{l.target ? rs(l.target) : 'Open'}</td>
+                            <td className="text-right tabular-nums whitespace-nowrap text-muted-foreground @max-lg:hidden">{l.target ? rs(l.target) : 'Open'}</td>
                             <td className="text-right font-semibold tabular-nums whitespace-nowrap">{l.offer !== undefined ? rs(l.offer) : 'Not yet'}</td>
                           </tr>
                         ))}

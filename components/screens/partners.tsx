@@ -1,12 +1,12 @@
 'use client'
 
 import { MessageSquareQuote, Phone, Plus, ShoppingCart, Store, Trash2, Warehouse } from 'lucide-react'
-import Link from 'next/link'
 import { AsyncButton, EmptyState, Meta, PageHeader, Panel, StatusPill, useConfirm } from '@/components/kit'
+import { Link } from '@/components/nav'
 import { Button } from '@/components/ui/button'
 import { useAct, useApp } from '@/lib/client'
 import { fmtDate, rs } from '@/lib/format'
-import { amountDue, sumBy } from '@/lib/logic'
+import { amountDue, partnerName, sumBy } from '@/lib/logic'
 import { MODE_LABEL, type AppState, type Partner } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -91,8 +91,26 @@ export function SuppliersView() {
       )}
 
       {compare.length > 0 && (
-        <Panel title="Compare supplier prices" subtitle="Items that more than one of your suppliers sells. The lowest base price is marked.">
-          <div className="overflow-x-auto">
+        <Panel title="Compare supplier prices" subtitle="Items that more than one of your suppliers sells. The lowest base price is marked." bodyClassName="@container">
+          <ul className="divide-y @3xl:hidden">
+            {compare.map(([name, offers]) => {
+              const best = Math.min(...offers.map((o) => o.price))
+              return (
+                <li key={name} className="flex flex-col gap-2 px-4 py-3.5">
+                  <p className="font-semibold">{name}</p>
+                  <dl className="flex flex-col gap-1.5 text-sm">
+                    {[...offers].sort((a, b) => a.price - b.price).map((o) => (
+                      <div key={o.supplierId} className="flex items-baseline justify-between gap-3">
+                        <dt className="min-w-0 truncate text-muted-foreground">{partnerName(s, o.supplierId)}</dt>
+                        <dd className={cn('shrink-0 tabular-nums', o.price === best && 'font-semibold text-tone-green-ink')}>{`${rs(o.price)}${o.price === best ? ' · lowest' : ''}`}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              )
+            })}
+          </ul>
+          <div className="overflow-x-auto @max-3xl:hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left [&>th]:px-4 [&>th]:py-2.5 [&>th]:font-semibold">

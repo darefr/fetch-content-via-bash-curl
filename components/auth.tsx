@@ -48,7 +48,7 @@ export function AuthFrame({ children }: { children: ReactNode }) {
           </ul>
         </div>
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
-          <Image src="/images/kirana-shop.png" alt="" fill sizes="40vw" className="object-cover object-[50%_72%]" priority />
+          <Image src="/images/kirana-shop.webp" alt="" fill sizes="40vw" className="object-cover object-[50%_72%]" priority />
         </div>
       </aside>
       <div className="flex min-h-dvh flex-col items-center px-4 py-8 lg:py-10">
